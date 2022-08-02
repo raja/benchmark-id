@@ -1,4 +1,5 @@
-(❯ go test -bench . -benchmem -benchtime 5s  --cpu 2,32
+```
+❯ go test -bench . -benchmem -benchtime 5s  --cpu 2,32
 goos: linux
 goarch: amd64
 pkg: github.com/raja/benchmark-id
@@ -31,3 +32,4 @@ BenchmarkParallelULIDCryptoThreadSafeString-2     	48970002	       126.0 ns/op	 
 BenchmarkParallelULIDCryptoThreadSafeString-32    	36091648	       166.9 ns/op	      16 B/op	       1 allocs/op
 PASS
 ok  	github.com/raja/benchmark-id	174.801s
+```
