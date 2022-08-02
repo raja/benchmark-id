@@ -14,33 +14,25 @@ import (
 	"github.com/rs/xid"
 )
 
-func BenchmarkUUID(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		uuid.New()
-	}
-}
-
 func BenchmarkPoolUUID(b *testing.B) {
 	uuid.EnableRandPool()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		uuid.New()
+		_ = uuid.New()
 	}
 }
 
-func BenchmarkXID(b *testing.B) {
-	uuid.EnableRandPool()
+func BenchmarkXIDNew(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		xid.New()
+		_ = xid.New()
 	}
 }
 
-func BenchmarkULID(b *testing.B) {
+func BenchmarkULIDMake(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		ulid.Make()
+		_ = ulid.Make()
 	}
 }
 
@@ -69,14 +61,10 @@ func benchmarkMakeULID(b *testing.B, f func(uint64, io.Reader)) {
 		name    string
 		entropy io.Reader
 	}{
-		{"WithCrypoEntropy", crand.Reader},
-		{"WithEntropy", rng},
-		{"WithMonotonicEntropy_Inc0", ulid.Monotonic(rng, 0)},
-		{"WithMonotonicEntropy_Inc1", ulid.Monotonic(rng, 1)},
-		{"WithCryptoMonotonicEntropy_Inc0", ulid.Monotonic(crand.Reader, 0)},
-		{"WithCryptoMonotonicEntropy_Inc1", ulid.Monotonic(crand.Reader, 1)},
+
+		{"WithMonotonicEntropy", ulid.Monotonic(rng, 0)},
+		{"WithCryptoMonotonicEntropy", ulid.Monotonic(crand.Reader, 0)},
 		{"WithCryptoThreadSafe", CryptoEntropy()},
-		{"WithoutEntropy", nil},
 	} {
 		tc := tc
 		b.Run(tc.name, func(b *testing.B) {
@@ -90,16 +78,8 @@ func benchmarkMakeULID(b *testing.B, f func(uint64, io.Reader)) {
 
 func BenchmarkULIDNew(b *testing.B) {
 	benchmarkMakeULID(b, func(timestamp uint64, entropy io.Reader) {
-		_, _ = ulid.New(timestamp, entropy)
+		_ = ulid.MustNew(timestamp, entropy)
 	})
-}
-
-func BenchmarkUUIDString(b *testing.B) {
-	uuid.DisableRandPool()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		uuid.NewString()
-	}
 }
 
 func BenchmarkPoolUUIDString(b *testing.B) {
@@ -110,30 +90,25 @@ func BenchmarkPoolUUIDString(b *testing.B) {
 	}
 }
 
-func BenchmarkPoolXIDString(b *testing.B) {
-	uuid.EnableRandPool()
+func BenchmarXIDString(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = xid.New().String()
 	}
 }
 
-func BenchmarkPoolULIDString(b *testing.B) {
-	uuid.EnableRandPool()
+func BenchmarkULIDString(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = ulid.Make().String()
 	}
 }
 
-func BenchmarkParallellUUIDString(b *testing.B) {
-	uuid.DisableRandPool()
+func BenchmarkULIDCryptoString(b *testing.B) {
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			_ = uuid.New().String()
-		}
-	})
+	for i := 0; i < b.N; i++ {
+		_ = ulid.MustNew(ulid.Now(), CryptoEntropy()).String()
+	}
 }
 
 func BenchmarkParallelPoolUUIDString(b *testing.B) {
@@ -155,19 +130,7 @@ func BenchmarkParallelXIDString(b *testing.B) {
 	})
 }
 
-func BenchmarkParallelULIDString(b *testing.B) {
-	entropy := ulid.DefaultEntropy()
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		ts := ulid.Now()
-		for pb.Next() {
-			_ = ulid.MustNew(ts, entropy).String()
-		}
-	})
-}
-
 func BenchmarkParallelULIDMakeString(b *testing.B) {
-
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
@@ -180,9 +143,8 @@ func BenchmarkParallelULIDCryptoThreadSafeString(b *testing.B) {
 	entropy := CryptoEntropy()
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
-		ts := ulid.Now()
 		for pb.Next() {
-			_ = ulid.MustNew(ts, entropy).String()
+			_ = ulid.MustNew(ulid.Now(), entropy).String()
 		}
 	})
 }
